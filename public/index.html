@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Markdown Viewer</title>
+</head>
+<body>
+    <h1>Archivos Markdown</h1>
+    <ul id="fileList"></ul>
+
+    <h2>Contenido HTML</h2>
+    <div id="viewer" style="border:1px solid #ccc;padding:1em;"></div>
+
+    <h2>Nuevo Archivo</h2>
+    <input id="newName" placeholder="nombre.md"><br>
+    <textarea id="newContent" rows="5" cols="40"></textarea><br>
+    <button onclick="crearArchivo()">Guardar</button>
+
+    <script>
+    window.onload=()=>{
+        fetch('/files')
+            .then(res=>res.json())
+            .then(archivos=>{
+                const lista=document.getElementById('fileList');
+                archivos.forEach(nombre=>{
+                    const li=document.createElement('li');
+                    li.innerHTML=`<a href="#" onclick="verArchivo('${nombre}')">${nombre}</a>`;
+                    lista.appendChild(li);
+                });
+            });
+    };
+
+    function verArchivo(nombre){
+        fetch('/file?name='+encodeURIComponent(nombre))
+            .then(res=>res.json())
+            .then(data=>{
+                document.getElementById('viewer').innerHTML=data.html;
+            });
+    }
+
+    function crearArchivo(){
+        const name=document.getElementById('newName').value;
+        const content=document.getElementById('newContent').value;
+        fetch('/file',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({name,content})
+        }).then(res=>res.json())
+        .then(resp=>{
+            if(resp.success){
+                alert('Archivo creado');
+                location.reload();
+            }else{
+                alert('Error: '+resp.error);
+            }
+        });
+    }
+    </script>
+</body>
+</html>
